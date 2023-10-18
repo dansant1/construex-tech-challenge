@@ -159,7 +159,7 @@ export class TasksController {
 
   @Get('process-overdue')
   async processOverdueTasks(): Promise<{ message: string }> {
-    this.queueService.registerWorkers();
+    void this.queueService.registerWorkers();
     return { message: 'Background processes started' };
   }
 
