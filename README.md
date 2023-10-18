@@ -47,7 +47,6 @@ docker exec -it nest-app npm run start:dev
 ```
 Tu aplicación estará disponible en http://localhost:3000
 
-Documentación API
 Puedes acceder a la documentación de la API en http://localhost:3000/docs
 
 ## Installation
