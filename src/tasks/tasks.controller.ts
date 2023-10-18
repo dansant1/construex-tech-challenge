@@ -37,13 +37,15 @@ import {
 } from '@nestjs/swagger';
 
 
-@Controller('tasks')
+@Controller('task')
 @ApiTags('tasks')
 export class TasksController {
-    constructor(
-        private readonly tasksService: TasksService,
-        private readonly queueService: QueueService,
-    ) {}
+  constructor(
+      private readonly tasksService: TasksService,
+      private readonly queueService: QueueService,
+  ) {}
+
+ 
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -61,7 +63,7 @@ export class TasksController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':id')
+  @Get('by/:id')
   @ApiCreatedResponse({ description: 'Task details' })
   @ApiNotFoundResponse({ description: 'Task not found' })
   @ApiInternalServerErrorResponse({ description: 'Internal server error' })
@@ -70,16 +72,12 @@ export class TasksController {
     @Req() req,
     @Param('id') id: number
   ): Promise<Task> {
-    try {
         const userId = req.user.sub;
         const task = await this.tasksService.findOne(+id, userId);
         if (!task) {
             throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
         }
         return task;
-    } catch (error) {
-        throw new HttpException('Failed to retrieve the task', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -116,17 +114,13 @@ export class TasksController {
     @Param('id') id: number, 
     @Body(new ValidationPipe()) updateTaskDto: UpdateTaskDto,
   ): Promise<Task> {
-    try {
         const userId = req.user.sub;
         const task = await this.tasksService.update(+id, updateTaskDto, userId);
         if (!task) {
           throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
         }
         return task;
-    } catch (error) {
-        console.log('error=', error);
-        throw new HttpException('Failed to update the task', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+   
   }
 
   @UseGuards(JwtAuthGuard)
@@ -141,7 +135,6 @@ export class TasksController {
   ): Promise<{
     message: string,
   }> {
-    try {
         const userId = req.user.sub;
         const result = await this.tasksService.remove(+id, userId);
         //@ts-ignore
@@ -151,15 +144,11 @@ export class TasksController {
         return {
           message: 'task deleted',
         }
-    } catch (error) {
-        console.log('error=', error);
-        throw new HttpException('Failed to delete the task', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
   }
 
   @Get('process-overdue')
   async processOverdueTasks(): Promise<{ message: string }> {
-    void this.queueService.registerWorkers();
+    void this.queueService.initQueueAndMonitorWorkers();
     return { message: 'Background processes started' };
   }
 
