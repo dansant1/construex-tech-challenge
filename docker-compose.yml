@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: my_postgres
+    environment:
+      POSTGRES_USER: johndoe
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:latest
+    container_name: my_redis
+    ports:
+      - "6379:6379"
+
+  prisma-migrate:
+    build: ./prisma
+    command: ["npx", "prisma", "migrate", "dev"]
+    depends_on:
+      - postgres
+    volumes:
+      - ./prisma:/app/prisma
+    environment:
+      DATABASE_URL: postgresql://johndoe:randompassword@postgres:5432/mydb
+
+  nest-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - prisma-migrate
+    environment:
+      DATABASE_URL: postgresql://johndoe:randompassword@postgres:5432/mydb
+      JWT_SIGN_KEY: mysecretkey 
